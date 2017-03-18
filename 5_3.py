@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+#線に色を付ける
+
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from OpenGL.GL import *
@@ -16,6 +18,29 @@ def display():
     # GL_ACCUM_BUFFER_BIT
     # GL_STENCIL_BUFFER_BIT
     glClear(GL_COLOR_BUFFER_BIT)
+
+    # これから描画するものの色を指定
+    # 0.0~1.0を指定
+    #glColorXYのXが引数の数 Yが型を表す(dならdouble, fならfloat, iならint)
+    #今回は3dなので引数３つのdouble型
+    glColor3(1.0, 0.0, 0.0)
+
+    #glBegin()〜glEnd()の間でコマンドを指定して図形を描く
+    #glBegin()の引数には描画する図形のタイプを指定
+    #このタイプ次第で処理速度などが決まる
+    glBegin(GL_LINE_LOOP)
+
+    #図形の各頂点の座標値を設定する関数を置く
+    #(-0.9, -0.9), (0.9, -0.9), (0.9, 0.9), (-0.9, 0.9)
+    #の順に線を引く
+    #GL_LINE_LOOPを指定しているので最後の点と最初の点も結ばれる
+    #座標系は-1.0 ~ 1.0に正規化されている
+    glVertex2d(-0.9, -0.9)
+    glVertex2d(0.9, -0.9)
+    glVertex2d(0.9, 0.9)
+    glVertex2d(-0.9, 0.9)
+
+    glEnd();
 
     # まだ実行されていない OpenGL の命令を全部実行
     # OpenGLは関数呼び出しで都度実行ではなくある程度命令が溜まったら一気に実行する仕様のため

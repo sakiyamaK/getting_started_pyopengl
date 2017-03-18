@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+# 空のウィンドウを開く
+
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from OpenGL.GL import *
