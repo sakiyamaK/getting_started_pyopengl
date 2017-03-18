@@ -34,13 +34,12 @@ def display():
     glVertex2d(0.9, 0.9)
     glVertex2d(-0.9, 0.9)
 
-    glEnd();
+    glEnd()
 
     # まだ実行されていない OpenGL の命令を全部実行
     # OpenGLは関数呼び出しで都度実行ではなくある程度命令が溜まったら一気に実行する仕様のため
     # ただしglFlushを呼びすぎると処理が遅くなる
     glFlush()
-    return
 
 
 def init():
