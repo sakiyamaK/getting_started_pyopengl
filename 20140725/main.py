@@ -39,7 +39,10 @@ def compile_shader(file_path, shaderType):
     #GL_COMPILE_STATUSならコンパイルの結果を取得
     compiled = glGetShaderiv(shader , GL_COMPILE_STATUS)
     if compiled == GL_FALSE :
-        print("Compile error in vertex shader.")
+        if(shaderType == GL_VERTEX_SHADER):
+            print("Compile error in vertex shader.")
+        else:
+            print("Compile error in fragment shader.")
         exit(1)
 
     return shader
@@ -92,7 +95,7 @@ def set_value_to_vertex(program, location_name, value_type, value, value_support
         glEnableVertexAttribArray(loc)
 
 
-def read_texture(texture_image):
+def read_texture(texture_image, texture_number=GL_TEXTURE0):
     #テクスチャオブジェクト/もしくはその配列を生成
     texture_id = glGenTextures(1)
 
@@ -103,7 +106,7 @@ def read_texture(texture_image):
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
     #テクスチャユニットの指定
-    glActiveTexture(GL_TEXTURE0)
+    glActiveTexture(texture_number)
 
     # 第１引数のtargetに対して第２引数のテクスチャオブジェクトを結合します．
     # テクスチャオブジェクトは，テクスチャ名に対して最初にこの呼び出しが行われたときに生成されます．
@@ -139,44 +142,49 @@ def read_texture(texture_image):
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE )
 
 
-def InitGL( vertex_shade_file, fragment_shader_file, texture_image ):
+def init_gl( vertex_shade_file, fragment_shader_file, texture_image):
     glClearColor(0.0, 0.0, 0.0, 0.0)
 
-    read_texture(texture_image)
+    texture_number = 0
+
+    read_texture(texture_image, GL_TEXTURE0 + texture_number)
 
     program = build_program(
         compile_shader(vertex_shade_file, GL_VERTEX_SHADER),
-        compile_shader(fragment_shader_file, GL_FRAGMENT_SHADER),)
+        compile_shader(fragment_shader_file, GL_FRAGMENT_SHADER),
+    )
 
     glUseProgram(program)
-
 
     # GPUに値を転送していく
 
     #頂点シェーダに転送
-    position_vertices = [
-        -1.0, 1.0,  #左上
-                          -1.0, 0.0,  #左下
-                           0.0, 0.0,  #右下
-                           0.0, 1.0,  #右上
+    position_vertices = [ -1.0, 1.0,  #左上
+                          -1.0, -1.0,  #左下
+                           1.0, -1.0,  #右下
+                           1.0, 1.0,  #右上
                          ]
     set_value_to_vertex(program, "a_position", "array", position_vertices, 2)
 
-
-    texture_vertices = [ 0.0, 0.0,
-                         0.0, 1.0,
-                         1.0, 1.0,
-                         1.0, 0.0,
+    # texture_vertices = [ 0.0, 0.0, #左上
+    #                      0.0, 1.0, #左下
+    #                      1.0, 1.0, #右下
+    #                      1.0, 0.0, #右上
+    #                      ]
+    texture_vertices = [ 0.0, 0.0, #左上
+                         0.0, 1.0, #左下
+                         1.0, 1.0, #右下
+                         1.0, 0.0, #右上
                          ]
     set_value_to_vertex(program, "a_texCoord", "array", texture_vertices , 2)
 
     #フラグメントシェーダに転送
 
     #テクスチャユニットの番号を指定してs_textureに割り当てる 今回ならGL_TEXTURE0に画像を用意してるので0
-    set_value_to_fragment(program, "s_texture", "int", 0, None)
+    set_value_to_fragment(program, "inputImageTexture", "int", texture_number, None)
 
-    set_value_to_fragment(program, "texture_width", "float", float( texture_image.size[ 0 ] ), None)
-    set_value_to_fragment(program, "texture_height", "float", float( texture_image.size[ 1 ] ), None)
+    set_value_to_fragment(program, "texture_width", "float", float(texture_image.size[0]), None)
+    set_value_to_fragment(program, "texture_height", "float", float(texture_image.size[1]), None)
 
 
 
@@ -188,12 +196,13 @@ def ReSizeGLScene(Width, Height):
 def DrawGLScene():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    glEnable( GL_TEXTURE_2D )
+    glEnable(GL_TEXTURE_2D)
 
     global indices
     indices = [ 0, 1, 2, 0, 2, 3 ]
 
-    glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, np.array(indices, np.uint16) )
+    # glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, np.array(indices, np.uint16))
 
     glDisable(GL_TEXTURE_2D)
 
@@ -206,7 +215,7 @@ def keyPressed(*args):
         sys.exit()
 
 def usage():
-    print("usage:%s vertex_shader_file fragment_shader_file texture_file" % sys.argv[ 0 ])
+    print("usage:%s texture_file" % sys.argv[ 0 ])
 
 
 def main():
@@ -218,8 +227,8 @@ def main():
         usage()
         sys.exit( -1 )
 
-    w_w = 320
-    w_h = int(w_w * 16 / 9)
+    w_w = 640*2
+    w_h = 360*2 #int(w_w * 16 / 9)
     # ディスプレイの初期位置と大きさを設定
     glutInitWindowPosition(800, 50)
     glutInitWindowSize(w_w, w_h)
@@ -258,7 +267,7 @@ def main():
     glutKeyboardFunc(keyPressed)
 
     # Initialize our window.
-    InitGL( vertex_shader_file, fragment_shader_file, texture_image )
+    init_gl(vertex_shader_file, fragment_shader_file, texture_image)
 
     # Start Event Processing Engine
     glutMainLoop()
